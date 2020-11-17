@@ -1,0 +1,5 @@
+/node_modules
+/build/*
+/data
+/.cache
+/config.js

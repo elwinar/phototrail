@@ -1,0 +1,22 @@
+@import url('normalize.css/normalize.css');
+
+// Border box is better for everyone.
+html {
+	box-sizing: border-box;
+}
+
+*, *:before, *:after {
+	box-sizing: inherit;
+}
+
+body {
+	// Take a reasonable space on screen, while ensuring we always have a
+	// little margin on the sides for readability.
+	width: calc(100% - 5em);
+	max-width: 960px;
+	margin: 0 auto;
+	padding: 2em 1em;
+	// Ensure we always have the scrollbar visible to avoid width-jumps.
+	overflow-y: scroll;
+}
+
