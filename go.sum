@@ -24,3 +24,5 @@ github.com/urfave/negroni v1.0.0/go.mod h1:Meg73S6kFm/4PpbYdq35yYWoCZ9mS/YSx+lKn
 golang.org/x/sys v0.0.0-20200116001909-b77594299b42/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae h1:/WDfKMnPU+m5M4xB+6x4kaepxRw6jWvR5iDRdvjHgy8=
 golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+rsc.io/sqlite v1.0.0 h1:zUGL/JDeFfblrma2rToXG+fUsGZe+CShUHI3KlUNwQc=
+rsc.io/sqlite v1.0.0/go.mod h1:bRoHdqsJCgrcQDvBeCS454l4kLoFAQKHdwfwpoweIOo=

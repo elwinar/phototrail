@@ -12,4 +12,5 @@ require (
 	github.com/rakyll/statik v0.1.7
 	github.com/rs/cors v1.7.0
 	github.com/urfave/negroni v1.0.0
+	rsc.io/sqlite v1.0.0
 )

@@ -9,18 +9,19 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
 	_ "github.com/elwinar/phototrail/bin/phototrail/internal"
-	"github.com/jmoiron/sqlx"
-
 	"github.com/inconshreveable/log15"
+	"github.com/jmoiron/sqlx"
 	"github.com/julienschmidt/httprouter"
 	"github.com/phyber/negroni-gzip/gzip"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/cors"
 	"github.com/urfave/negroni"
+	_ "rsc.io/sqlite"
 )
 
 var (
@@ -58,6 +59,8 @@ func wrap(err error, msg string, args ...interface{}) error {
 
 type service struct {
 	// Configuration.
+	authDomain   string
+	authClientID string
 	bind         string
 	dataDir      string
 	printVersion bool
@@ -79,8 +82,10 @@ func (s *service) configure() {
 	}
 
 	// General options.
-	fs.StringVar(&s.bind, "bind", "localhost:1105", "address to listen to")
-	fs.StringVar(&s.dataDir, "data-dir", "/var/lib/phototrail", "directory to store server's data")
+	fs.StringVar(&s.authDomain, "auth-domain", "", "auth0 domain to use for login")
+	fs.StringVar(&s.authClientID, "auth-client-id", "", "auth0 client id to use for login")
+	fs.StringVar(&s.bind, "bind", "localhost:1117", "address to listen to")
+	fs.StringVar(&s.dataDir, "data-dir", "./data", "directory to store server's data")
 	fs.BoolVar(&s.printVersion, "version", false, "print the version of rcoredumpd")
 
 	fs.Parse(os.Args[1:])
@@ -110,6 +115,12 @@ func (s *service) init() (err error) {
 		return wrap(err, `creating data directory`)
 	}
 
+	s.logger.Debug("connecting to the database")
+	s.database, err = sqlx.Connect("sqlite3", filepath.Join(s.dataDir, "database.sqlite"))
+	if err != nil {
+		return wrap(err, `connecting to database`)
+	}
+
 	s.logger.Debug("building assets")
 	s.rootHTML = fmt.Sprintf(`
 		<!DOCTYPE html>
@@ -124,11 +135,19 @@ func (s *service) init() (err error) {
 			<body>
 				<noscript>You need to enable JavaScript to run this app.</noscript>
 				<div id="root"></div>
-				<script>document.Version = '%s'; document.BuiltAt = '%s'; document.Commit = '%s';</script>
+				<script>
+					document.Version = '%s';
+					document.BuiltAt = '%s';
+					document.Commit = '%s';
+					document.config = {
+						authDomain: '%s',
+						authClientID: '%s',
+					};
+				</script>
 				<script src="/assets/index.js"></script>
 			</body>
 		</html>
-	`, Version, BuiltAt, Commit)
+	`, Version, BuiltAt, Commit, s.authDomain, s.authClientID)
 
 	return nil
 }
