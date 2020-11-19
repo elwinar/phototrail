@@ -1,0 +1,5 @@
+document.config = {
+	baseURL: "http://localhost:1117",
+	authDomain: "<auth0 domain>",
+	authClientID: "<auth0 client id>",
+}
