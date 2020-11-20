@@ -7,7 +7,7 @@ export function Card({ post, onLike }) {
   );
   const likes = (post.likes && post.likes.length.toLocaleString()) || "0";
   const date = new Date(post.created_at).toLocaleDateString();
-  console.log(isLikedByMe);
+
   return (
     <figure className={styles.Card}>
       {post.images &&

@@ -162,6 +162,7 @@ func (s *service) run(ctx context.Context) {
 	router := httprouter.New()
 	router.GET("/", s.root)
 	router.GET("/about", s.about)
+	router.GET("/me", s.me)
 	router.GET("/feed", s.feed)
 	router.POST("/posts", s.createPost)
 	router.POST("/posts/:post_id/images", s.uploadImage)
@@ -362,6 +363,19 @@ func (s *service) authenticateRequest(r *http.Request) (user, error) {
 	}
 
 	return u, nil
+}
+
+func (s *service) me(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	u, err := s.authenticateRequest(r)
+	if err != nil {
+		writeError(w, http.StatusUnauthorized, wrap(err, "authenticating request"))
+		return
+	}
+
+	write(w, http.StatusOK, map[string]interface{}{
+		"id":   u.ID,
+		"name": u.Name,
+	})
 }
 
 func (s *service) feed(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
