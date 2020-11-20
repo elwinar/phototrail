@@ -141,6 +141,12 @@ export function App() {
     }
   }
 
+  fetch(`${document.config.baseURL}/feed`, {
+    headers: {
+      Authorization: `Bearer ${state.token}`,
+    },
+  });
+
   // Finally, render the component itself. The header and searchbar are
   // always displayed, and the table gives way for fallback display in
   // case of error or if the first query didn't execute yet.
