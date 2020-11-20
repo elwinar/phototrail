@@ -1,0 +1,48 @@
+@import "./colors.scss";
+
+.Card {
+  background: white;
+  padding: 2em;
+  max-width: 100%;
+  margin: 2em 0;
+  box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.3);
+}
+
+.Image {
+  margin-bottom: 1rem;
+  display: block;
+  width: 100%;
+}
+
+.Header {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.Username {
+  color: $primary;
+}
+
+.Date {
+  color: $accent-color;
+}
+
+.Text {
+  margin-bottom: 1.5rem;
+}
+
+.Likes {
+  background: $primary;
+  color: white;
+  cursor: pointer;
+}
+
+.Liked {
+  color: $important;
+}
+
+.Likes:hover {
+  background: $secondary;
+}

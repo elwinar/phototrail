@@ -1,30 +1,26 @@
 import React, { useContext, useEffect, useState } from "react";
-import { sessionContext } from "./App";
+import styles from "./Feed.scss";
+import api from "./api";
+import { Card } from "./Card";
 
 export default function Feed() {
-  const session = useContext(sessionContext);
-  const [feed, setFeed] = useState([]);
+  const [feed, setFeed] = useState({});
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
 
-    fetch(`${document.config.baseURL}/feed`, {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + session.token,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.error) {
-          setError(data.error);
-          setLoading(false);
-          return;
-        }
+    api
+      .getFeed()
+      .then((posts) => {
         setLoading(false);
-        setFeed(data.posts || []);
+        setFeed(
+          posts.reduce((acc, i) => {
+            acc[i.id] = i;
+            return acc;
+          }, {})
+        );
       })
       .catch((error) => {
         setError(error.message);
@@ -32,9 +28,54 @@ export default function Feed() {
       });
   }, []);
 
-  if (loading) {
-    return <div>Loading, please wait...</div>;
+  function likeHandler(postID) {
+    if (
+      feed[postID].likes &&
+      feed[postID].likes.find((l) => l.user_id === document.session.user_id)
+    ) {
+      api.unlike(postID).then(() => {
+        let likes = feed[postID].likes.filter(
+          (l) => l.user_id !== document.session.user_id
+        );
+
+        setFeed({
+          ...feed,
+          [postID]: {
+            ...feed[postID],
+            likes,
+          },
+        });
+      });
+    } else {
+      api.like(postID).then(() => {
+        let likes = [...(feed[postID].likes || [])];
+
+        if (!likes.find((l) => l.user_id == document.session.user_id)) {
+          likes.push({
+            user_id: document.session.user_id,
+            user_name: document.session.user_name,
+          });
+        }
+
+        setFeed({
+          ...feed,
+          [postID]: {
+            ...feed[postID],
+            likes,
+          },
+        });
+      });
+    }
   }
+
+  if (loading) {
+    return (
+      <div>
+        <p>Loading, please wait….</p>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div>
@@ -45,35 +86,14 @@ export default function Feed() {
   }
 
   return (
-    <ul className="feed">
-      {feed.map((post) => {
+    <ul className={styles.Feed}>
+      {Object.values(feed).map((post) => {
         return (
           <li key={post.id}>
-            <PostCard post={post} />
+            <Card post={post} onLike={likeHandler} />
           </li>
         );
       })}
     </ul>
-  );
-}
-
-function PostCard({ post }) {
-  return (
-    <article className="card">
-      <header>
-        {post.user_name}
-        <div>{new Date(post.created_at).toLocaleDateString()}</div>
-      </header>
-      <div>
-        {post.images &&
-          post.images.map((path) => {
-            return <img key={path} src={`${document.config.baseURL}${path}`} alt={path} />;
-          })}
-      </div>
-      <section>
-        <p>{post.text}</p>
-      </section>
-      <footer>Likes: {post.likes && post.likes.length.toLocaleString()}</footer>
-    </article>
   );
 }

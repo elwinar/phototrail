@@ -1,11 +1,10 @@
 import React from "react";
-import "./App.scss";
+import styles from "./Header.scss";
 
-export default function Header({ openNewPostForm, isFormOpen }) {
+export default function Header() {
   return (
-    <header className="header">
+    <header className={styles.Header}>
       <h1>Phototrail</h1>
-      {!isFormOpen && <button onClick={openNewPostForm}>New post</button>}
     </header>
   );
 }

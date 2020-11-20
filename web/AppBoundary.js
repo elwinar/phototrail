@@ -1,5 +1,8 @@
 import React from "react";
 
+import Footer from "./Footer";
+import Header from "./Header";
+
 // AppBoundary is the error-catching component for the whole app.
 export class AppBoundary extends React.Component {
   constructor(props) {

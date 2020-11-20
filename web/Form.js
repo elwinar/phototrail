@@ -1,9 +1,6 @@
 import React, { useContext, useState } from "react";
-import { sessionContext } from "./App";
 
 export default function Form({ onClose, isOpen }) {
-  const session = useContext(sessionContext);
-
   const [comment, setComment] = useState("");
   const [files, setFiles] = useState([]);
 
@@ -71,41 +68,4 @@ export default function Form({ onClose, isOpen }) {
       <button type="submit">Post</button>
     </form>
   );
-}
-
-function createPost(session, payload) {
-  return fetch(`${document.config.baseURL}/posts`, {
-    method: "POST",
-    headers: {
-      Authorization: "Bearer " + session.token,
-    },
-    body: JSON.stringify(payload),
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      return data;
-    });
-}
-
-function uploadImage(session, image, postId) {
-  return fetch(`${document.config.baseURL}/posts/${postId}/images`, {
-    method: "POST",
-    headers: {
-      Authorization: "Bearer " + session.token,
-      "Content-Type": "image/jpeg",
-    },
-    body: image,
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      return data;
-    });
 }
