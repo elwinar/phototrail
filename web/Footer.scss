@@ -1,0 +1,14 @@
+@import "./colors.scss";
+
+.Footer {
+  text-align: center;
+  font-size: 0.8rem;
+
+  a {
+    color: $primary;
+  }
+
+  a:hover {
+    color: $secondary;
+  }
+}
