@@ -182,6 +182,7 @@ func (s *service) run(ctx context.Context) {
 	stack.Use(negroni.HandlerFunc(s.logRequest))
 	stack.Use(cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
+		AllowedHeaders: []string{"Authorization"},
 		AllowedMethods: []string{http.MethodGet, http.MethodPost, http.MethodDelete},
 	}))
 	stack.Use(gzip.Gzip(gzip.DefaultCompression))
