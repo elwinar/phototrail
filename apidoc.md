@@ -6,7 +6,7 @@ With the API token retrieved from Auth0's flow. This token must be provided in
 each request to the API endpoint.
 
 ```
-Authentication: Bearer <token>
+Authorization: Bearer <token>
 ```
 
 ## Errors

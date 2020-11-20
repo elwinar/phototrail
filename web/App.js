@@ -1,76 +1,9 @@
-import React from "react";
-import styles from "./App.scss";
-
-// AppBoundary is the error-catching component for the whole app.
-export class AppBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      error: false,
-    };
-  }
-
-  componentDidCatch(error, info) {
-    this.setState({
-      error: error,
-      info: info,
-    });
-  }
-
-  goback() {
-    this.setState({ error: false });
-  }
-
-  render() {
-    if (this.state.error !== false) {
-      return (
-        <React.Fragment>
-          <Header />
-          <h2>something went wrong</h2>
-          <p>{this.state.error.message}</p>
-          <pre>{this.state.info.componentStack.slice(1)}</pre>
-          {this.state.showStack ? (
-            <React.Fragment>
-              <p>
-                <a href="#" onClick={() => this.setState({ showStack: false })}>
-                  hide stack
-                </a>
-              </p>
-              <pre>{this.state.error.stack}</pre>
-            </React.Fragment>
-          ) : (
-            <p>
-              <a href="#" onClick={() => this.setState({ showStack: true })}>
-                show stack
-              </a>
-            </p>
-          )}
-          <p>
-            <a href="#" onClick={() => this.goback()}>
-              go back
-            </a>
-          </p>
-          <Footer />
-        </React.Fragment>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
-// Context used for passing the global state and dispatch function down.
-const ctx = React.createContext();
-
-// Zero state represent the uninitialized state value. Kinda like a default
-// value.
-const zeroState = {};
-
-function initializeState(state) {
-  return {
-    ...state,
-  };
-}
+import React, { useReducer, useState } from "react";
+import { AppBoundary } from "./AppBoundary";
+import Feed from "./Feed";
+import Footer from "./Footer";
+import Form from "./Form";
+import Header from "./Header";
 
 // randomString generate cryptographically-secure random strings for the needs
 // of the OAuth login flow.
@@ -106,26 +39,51 @@ function reducer(state, action) {
   }
 }
 
+// Context used for passing the global state and dispatch function down.
+export const sessionContext = React.createContext();
+
 // App is the main component, and is mainly concerned with high-level features
 // like state management and top-level components.
 export function App() {
-  const [state, dispatch] = React.useReducer(
+  const [session, sessionDispatch] = useReducer(
     reducer,
-    zeroState,
-    initializeState
+    {},
+    (defaultState = {}) => {
+      if (localStorage.getItem("session")) {
+        const session = JSON.parse(localStorage.getItem("session"));
+
+        return {
+          ...defaultState,
+          logged: true,
+          token: session.token,
+        };
+      }
+      return defaultState;
+    }
   );
+
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   // If we aren't logged, we handle user identification, either redirecting the
   // user to the authentication backend or getting the token from the
   // redirected URL.
-  if (!state.logged) {
+  if (!session.logged) {
     let params = new URLSearchParams(window.location.hash.slice(1));
+
     if (params.get("access_token")) {
-      dispatch({
+      sessionDispatch({
         type: "logged_in",
         token: params.get("access_token"),
         expiresIn: params.get("expires_in"),
       });
+
+      localStorage.setItem(
+        "session",
+        JSON.stringify({
+          token: params.get("access_token"),
+          expiresIn: params.get("expires_in"),
+        })
+      );
     } else {
       params = new URLSearchParams({
         client_id: document.config.authClientID,
@@ -141,44 +99,17 @@ export function App() {
     }
   }
 
-  fetch(`${document.config.baseURL}/feed`, {
-    headers: {
-      Authorization: `Bearer ${state.token}`,
-    },
-  });
-
   // Finally, render the component itself. The header and searchbar are
   // always displayed, and the table gives way for fallback display in
   // case of error or if the first query didn't execute yet.
   return (
-    <ctx.Provider value={{ dispatch }}>
-      <Header />
-      <Footer />
-    </ctx.Provider>
-  );
-}
-
-// Header is a separate component so it can be shared in the AppBoundary and in
-// the App itself.
-function Header() {
-  return (
-    <header className={styles.Header}>
-      <h1>
-        Phototrail <sup>{document.Version}</sup>
-      </h1>
-    </header>
-  );
-}
-
-// Footer is a separate component so it can be shared in the AppBoundary and in
-// the App itself.
-function Footer() {
-  return (
-    <footer className={styles.Footer}>
-      <p>
-        For documentation, issues, see the{" "}
-        <a href="https://github.com/elwinar/phototrail">repository</a>.
-      </p>
-    </footer>
+    <AppBoundary>
+      <sessionContext.Provider value={session}>
+        <Header openNewPostForm={() => setIsFormOpen(true)} isFormOpen={isFormOpen} />
+        <Form onClose={() => setIsFormOpen(false)} isOpen={isFormOpen} />
+        <Feed />
+        <Footer />
+      </sessionContext.Provider>
+    </AppBoundary>
   );
 }
