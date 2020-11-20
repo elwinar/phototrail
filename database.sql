@@ -1,13 +1,15 @@
 create table users (
-	id unsigned integer,
+	id integer,
+	sub varchar(255) not null,
 	name varchar(255) not null,
 
-	primary key (id)
+	primary key (id),
+	unique (sub)
 );
 
 create table posts (
-	id unsigned integer,
-	user_id unsigned integer not null,
+	id integer,
+	user_id integer not null,
 	text text,
 	created_at datetime default current_timestamp,
 
@@ -16,7 +18,7 @@ create table posts (
 );
 
 create table images (
-	post_id unsigned integer,
+	post_id integer,
 	path varchar(255),
 
 	primary key (post_id, path),
@@ -24,8 +26,8 @@ create table images (
 );
 
 create table likes (
-	post_id unsigned integer,
-	user_id unsigned integer,
+	post_id integer,
+	user_id integer,
 
 	primary key (post_id, user_id),
 	foreign key (post_id) references posts(id) on delete cascade,
@@ -33,9 +35,9 @@ create table likes (
 );
 
 create table comments (
-	id unsigned integer,
-	post_id unsigned integer,
-	user_id unsigned integer,
+	id integer,
+	post_id integer,
+	user_id integer,
 	text text,
 	created_at datetime default current_timestamp,
 

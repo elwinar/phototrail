@@ -2,13 +2,16 @@
 
 ## Authentication
 
-With the API token retrieved from Auth0's flow.
+With the API token retrieved from Auth0's flow. This token must be provided in
+each request to the API endpoint.
 
 ```
 Authentication: Bearer <token>
 ```
 
 ## Errors
+
+Error are represented by the `error` key of the response.
 
 ```
 500 Internal Server Error
@@ -21,8 +24,11 @@ Authentication: Bearer <token>
 ## GET /feed
 
 ```
-GET /feed
+GET /feed?from=2006-01-02T15:04:05Z&limit=20
 ```
+
+The `from` parameter will default to the current time if absent, and `limit`
+will default to 20.
 
 ```
 200 OK
@@ -37,8 +43,8 @@ GET /feed
 			"created_at": "2006-01-02T15:04:05Z",
 			"images": ["10329D92012120AF.jpg", "12921812AFDC12912.png"],
 			"likes": [
-				{"id": 1, "name": "Alice"},
-				{"id": 2, "name": "Bob"}
+				{"user_id": 1, "user_name": "Alice"},
+				{"user_id": 2, "user_name": "Bob"}
 			],
 			"comments": [
 				{
@@ -58,16 +64,22 @@ GET /feed
 
 ```
 POST /posts
-Content-Type: multipart/form-data
 
 {
 	"text": "J'aime les ananas"
 }
-
-<images>
 ```
 
 ## DELETE /posts/1
+
+## POST /posts/1/images
+
+```
+POST /posts/1/images
+Content-Type: image/jpeg
+
+<binary data>
+```
 
 ## POST /posts/1/like
 
