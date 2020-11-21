@@ -4,6 +4,10 @@ import { App } from "./App";
 import { AppBoundary } from "./AppBoundary.js";
 import "./index.scss";
 
+if (!document.config.baseURL) {
+  document.config.baseURL = window.location.origin;
+}
+
 (async function () {
   // randomString generate cryptographically-secure random strings for the needs
   // of the OAuth login flow.
