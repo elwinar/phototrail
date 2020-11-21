@@ -24,13 +24,13 @@ import (
 	"github.com/inconshreveable/log15"
 	"github.com/jmoiron/sqlx"
 	"github.com/julienschmidt/httprouter"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/patrickmn/go-cache"
 	"github.com/phyber/negroni-gzip/gzip"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/cors"
 	"github.com/urfave/negroni"
 	"go4.org/syncutil/singleflight"
-	_ "modernc.org/sqlite"
 )
 
 var (
@@ -128,7 +128,7 @@ func (s *service) init() (err error) {
 	}
 
 	s.logger.Debug("connecting to the database")
-	s.database, err = sqlx.Connect("sqlite", filepath.Join(s.dataDir, "database.sqlite"))
+	s.database, err = sqlx.Connect("sqlite3", filepath.Join(s.dataDir, "database.sqlite"))
 	if err != nil {
 		return wrap(err, `connecting to database`)
 	}
