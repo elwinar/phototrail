@@ -35,6 +35,12 @@
   color: $important;
 }
 
+.Footer {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
 .CommentsButton {
   background: transparent;
   color: $primary;
@@ -46,15 +52,54 @@
   }
 }
 
+.Form {
+  
+}
+
 .Input {
   width: 100%;
   border-radius: 2px;
   border: 1px solid $grey;
-  padding: .5rem;
+  padding: .5rem 1rem; 
   border-radius: 18px;
 
   &:focus {
     outline: none;
     border-color: $primary;
+  }
+}
+
+.Comments {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  margin-bottom: 1rem;
+}
+
+.CommentInfo {
+  margin-bottom: 0;
+  margin-top: 0;
+  font-size: 0.889rem;
+}
+
+.CommentUserName {
+  color: $secondary;
+}
+
+.CommentDate {
+  color: $accent-color;
+  margin-right: 1rem;
+}
+
+.Comment {
+  background-color: $light-grey;
+  border-radius: 10px 10px 10px 0;
+  padding: .5rem;
+  margin-bottom: .5rem;
+  margin-top: 0;
+
+  &.Mine {
+    background-color: $light;
+    border-radius: 10px 10px 0 10px;
   }
 }

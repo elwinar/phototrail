@@ -1,7 +1,7 @@
-import React, { useContext, useEffect, useState } from "react";
+import React from "react";
 import styles from "./Feed.scss";
-import api from "./api";
 import { Card } from "./Card";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 export default function Feed({ loading, feed, onLike, onComment }) {
   if (loading) {
@@ -19,7 +19,9 @@ export default function Feed({ loading, feed, onLike, onComment }) {
         .map((post) => {
           return (
             <li key={post.id}>
-              <Card post={post} onLike={onLike} />
+              <ErrorBoundary>
+                <Card post={post} onLike={onLike} onComment={onComment} />
+              </ErrorBoundary>
             </li>
           );
         })}

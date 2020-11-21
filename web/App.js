@@ -85,7 +85,29 @@ export function App() {
       });
   }
 
-  function commentHandler() {}
+  function commentHandler(postId, comment) {
+    return api.createComment(postId, comment).then((commentId) => {
+      let comments = feed[postId].comments || [];
+
+      comments = [...comments, {
+        id: commentId,
+        user_id: document.session.user_id,
+        user_name: document.session.user_name,
+        text: comment,
+        created_at: new Date().toISOString()
+      }]
+
+      setFeed({
+        ...feed,
+        [postId]: {
+          ...feed[postId],
+          comments
+        }
+      });
+
+      return commentId;
+    })
+  }
 
   if (error) {
     return (
