@@ -8,8 +8,7 @@ import "./index.scss";
   // randomString generate cryptographically-secure random strings for the needs
   // of the OAuth login flow.
   function randomString(length) {
-    const chars =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     let numbers = new Uint32Array(length);
     window.crypto.getRandomValues(numbers);
@@ -53,11 +52,7 @@ import "./index.scss";
   // Check if we've got something in the local storage. If we do, put the token
   // in the state and be happy.
   document.session = JSON.parse(localStorage.getItem("session"));
-  if (
-    !document.session ||
-    !document.session.token ||
-    document.session.expiration < Date.now()
-  ) {
+  if (!document.session || !document.session.token || document.session.expiration < Date.now()) {
     localStorage.clear();
 
     // If we don't, stop right there and redirect to the auth.
@@ -69,9 +64,7 @@ import "./index.scss";
       nonce: randomString(8),
       state: randomString(8),
     });
-    window.location.replace(
-      `https://${document.config.authDomain}/authorize?${params.toString()}`
-    );
+    window.location.replace(`https://${document.config.authDomain}/authorize?${params.toString()}`);
   } else {
     ReactDOM.render(
       <AppBoundary>

@@ -28,8 +28,7 @@ export function Card({ post, onLike }) {
         </p>
         <p className={styles.Text}>{post.text}</p>
         <button className={styles.Likes} onClick={() => onLike(post.id)}>
-          <span className={isLikedByMe ? styles.Liked : ""}>&#9829;</span>{" "}
-          {likes}
+          <span className={isLikedByMe ? styles.Liked : ""}>&#9829;</span> {likes}
         </button>
       </figcaption>
     </figure>

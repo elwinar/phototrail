@@ -1,8 +1,6 @@
 @import "./colors.scss";
 
 .Feed {
+  @include container;
   list-style: none;
-  margin: auto;
-  max-width: 600px;
-  padding: 1em;
 }

@@ -1,71 +1,65 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
+import styles from "./Form.scss";
+import api from "./api";
 
-export default function Form({ onClose, isOpen }) {
+export default function Form({ onSubmit }) {
   const [comment, setComment] = useState("");
-  const [files, setFiles] = useState([]);
+  const [images, setImages] = useState([]);
 
-  if (!isOpen) {
-    return null;
+  async function handleImages(files) {
+    let results = [];
+    for (let i = 0; i < files.length; i++) {
+      results.push({
+        file: files[i],
+        dataURL: await new Promise((resolve) => {
+          let reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(files[i]);
+        }),
+      });
+    }
+    setImages(results);
   }
 
-  function handleSubmit(e) {
-    e.preventDefault();
-
-    if (!files.length && !comment.length) {
-      onClose();
-      return;
-    }
-
-    return createPost(session, { text: comment })
-      .then((post) => {
-        const imageUploads = Array.from(files).map((file) =>
-          uploadImage(session, file, post.post_id)
-        );
-
-        return Promise.all(imageUploads);
-      })
-      .then(() => {
-        setComment("");
-        setFiles([]);
-        e.target.reset();
-        onClose();
-      });
+  function reset() {
+    setComment("");
+    setImages([]);
   }
 
   return (
-    <form onSubmit={handleSubmit} className="form">
-      <h1>New post</h1>
-      <div>
-        <label htmlFor="comment">Comment:</label>
-        <br />
+    <section className={styles.Container}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSubmit({ comment, images });
+        }}
+        className={styles.Form}
+      >
+        <h1>New post</h1>
+        <fieldset className={styles.Upload}>
+          {images.map((image) => (
+            <img key={image.file.name} className={styles.Image} src={image.dataURL} />
+          ))}
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => handleImages(e.target.files)}
+          />
+          <button type="reset" onClick={reset}>
+            Reset
+          </button>
+        </fieldset>
         <textarea
-          name="comment"
-          id="comment"
+          className={styles.Comment}
           placeholder="Your comment here..."
           onChange={(e) => setComment(e.target.value)}
           value={comment}
         />
-      </div>
-      <input
-        type="file"
-        name="image"
-        id="image"
-        multiple
-        onChange={(e) => {
-          setFiles(e.target.files);
-        }}
-      />
-      <button
-        type="reset"
-        onClick={() => {
-          setComment("");
-          setFiles([]);
-          onClose();
-        }}
-      >
-        Cancel
-      </button>
-      <button type="submit">Post</button>
-    </form>
+        <button className={styles.Submit} type="submit">
+          Post
+        </button>
+      </form>
+    </section>
   );
 }

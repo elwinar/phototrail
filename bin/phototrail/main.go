@@ -645,7 +645,9 @@ func (s *service) uploadImage(w http.ResponseWriter, r *http.Request, p httprout
 		values (?, ?)
 	`, postID, path)
 
-	write(w, http.StatusOK, map[string]interface{}{"acknowledged": true, "path": path})
+	write(w, http.StatusOK, map[string]interface{}{
+		"path": filepath.Join("/images/", path),
+	})
 }
 
 func (s *service) deletePost(w http.ResponseWriter, r *http.Request, p httprouter.Params) {

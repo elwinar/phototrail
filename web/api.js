@@ -18,7 +18,7 @@ function createPost({ text, images = [] }) {
   return fetch(`${document.config.baseURL}/posts`, {
     method: "POST",
     headers: {
-      Authorization: "Bearer " + session.token,
+      Authorization: "Bearer " + document.session.token,
     },
     body: JSON.stringify({ text }),
   })
@@ -28,14 +28,20 @@ function createPost({ text, images = [] }) {
         throw new Error(data.error);
       }
 
-      return Promise.all(
-        Array.from(images).map((image) => uploadImage(data.post_id, image))
-      ).then((res) => {
-        return {
-          post_id: data.post_id,
-          images: res,
-        };
-      });
+      return Promise.all(Array.from(images).map((image) => uploadImage(data.post_id, image))).then(
+        (res) => {
+          return {
+            id: data.post_id,
+            user_id: document.session.user_id,
+            user_name: document.session.user_name,
+            text: text,
+            created_at: new Date().toISOString(),
+            likes: null,
+            comments: null,
+            images: res,
+          };
+        }
+      );
     });
 }
 
@@ -43,7 +49,7 @@ function uploadImage(postID, image) {
   return fetch(`${document.config.baseURL}/posts/${postID}/images`, {
     method: "POST",
     headers: {
-      Authorization: "Bearer " + session.token,
+      Authorization: "Bearer " + document.session.token,
     },
     body: image,
   })
@@ -109,7 +115,7 @@ function createComment(postID, text) {
   return fetch(`${document.config.baseURL}/posts/${postID}/comments`, {
     method: "POST",
     headers: {
-      Authorization: "Bearer " + session.token,
+      Authorization: "Bearer " + document.session.token,
     },
     body: JSON.stringify({ text }),
   })
@@ -124,15 +130,12 @@ function createComment(postID, text) {
 }
 
 function deleteComment(postID, commentID) {
-  return fetch(
-    `${document.config.baseURL}/posts/${postID}/comments/${commentID}`,
-    {
-      method: "DELETE",
-      headers: {
-        Authorization: "Bearer " + document.session.token,
-      },
-    }
-  )
+  return fetch(`${document.config.baseURL}/posts/${postID}/comments/${commentID}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: "Bearer " + document.session.token,
+    },
+  })
     .then((res) => res.json())
     .then((data) => {
       if (data.error) {

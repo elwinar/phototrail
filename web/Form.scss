@@ -1,19 +1,41 @@
 @import "./colors.scss";
 
+.Container {
+  @include container;
+}
+
 .Form {
+  @include polaroid;
+}
+
+.Upload {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.Image {
+  @include image;
+}
+
+.Comment {
+  height: 10rem;
   width: 100%;
-  padding: 2rem;
+  border: 1px solid #ccc;
+  outline: none;
+  padding: 0.5rem;
+  color: #444;
+  resize: vertical;
+  margin-bottom: 1rem;
 
-  textarea {
-    height: 10rem;
-    width: 100%;
-    border: 1px solid #ccc;
-    outline: none;
-    padding: 0.5rem;
-    color: #444;
-
-    &:focus {
-      border-color: $secondary;
-    }
+  &:focus {
+    border-color: $secondary;
   }
+}
+
+.Submit {
+  @include primary-button;
 }
