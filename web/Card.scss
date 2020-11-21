@@ -28,9 +28,33 @@
 }
 
 .Likes {
-  @include primary-button;
+  @include secondary-button;
 }
 
 .Liked {
   color: $important;
+}
+
+.CommentsButton {
+  background: transparent;
+  color: $primary;
+
+
+  &:hover {
+    text-decoration: underline;
+    color: $dark;
+  }
+}
+
+.Input {
+  width: 100%;
+  border-radius: 2px;
+  border: 1px solid $grey;
+  padding: .5rem;
+  border-radius: 18px;
+
+  &:focus {
+    outline: none;
+    border-color: $primary;
+  }
 }

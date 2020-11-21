@@ -16,7 +16,7 @@ html {
 body {
   // Ensure we always have the scrollbar visible to avoid width-jumps.
   overflow-y: scroll;
-  background: $grey;
+  background: $light-grey;
   font-family: "Open Sans", sans-serif;
   font-weight: 400;
   line-height: 1.75;
@@ -71,6 +71,7 @@ p {
 }
 
 button {
+  cursor: pointer;
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 2px;

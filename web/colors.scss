@@ -11,6 +11,7 @@ $secondary: $queen-blue;
 $light: $nyanza;
 $dark: $midnight-green-eagle-green;
 $grey: #ccc;
+$light-grey: #f1f1f1;
 $accent-color: #aaa;
 
 @mixin container {
@@ -30,10 +31,19 @@ $accent-color: #aaa;
 @mixin primary-button {
   background: $primary;
   color: white;
-  cursor: pointer;
 
   &:hover {
     background: $secondary;
+  }
+}
+
+@mixin secondary-button {
+  background: $light;
+  color: $primary;
+
+  &:hover {
+    background: $primary;
+    color: white;
   }
 }
 
