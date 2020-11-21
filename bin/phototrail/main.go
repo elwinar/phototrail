@@ -711,7 +711,7 @@ func (s *service) createComment(w http.ResponseWriter, r *http.Request, p httpro
 		return
 	}
 
-	_, err = s.database.ExecContext(r.Context(), `
+	res, err := s.database.ExecContext(r.Context(), `
 		insert into comments (user_id, post_id, text)
 		values (?, ?, ?)
 	`, u.ID, postID, c.Text)
@@ -719,8 +719,11 @@ func (s *service) createComment(w http.ResponseWriter, r *http.Request, p httpro
 		writeError(w, http.StatusInternalServerError, wrap(err, "inserting comment"))
 		return
 	}
+	commentID, _ := res.LastInsertId()
 
-	write(w, http.StatusOK, map[string]interface{}{"acknowledged": true})
+	write(w, http.StatusOK, map[string]interface{}{
+		"comment_id": commentID,
+	})
 }
 
 func (s *service) deleteComment(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
