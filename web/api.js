@@ -32,7 +32,7 @@ function createPost({ text, images = [] }) {
             created_at: new Date().toISOString(),
             likes: null,
             comments: null,
-            images: res,
+            images: [...new Set(res)],
           };
         }
       );
