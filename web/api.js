@@ -1,9 +1,6 @@
 function getFeed() {
-  return fetch(`${document.config.baseURL}/feed`, {
+  return call(`${document.config.baseURL}/feed`, {
     method: "GET",
-    headers: {
-      Authorization: "Bearer " + document.session.token,
-    },
   })
     .then((res) => res.json())
     .then((data) => {
@@ -15,11 +12,8 @@ function getFeed() {
 }
 
 function createPost({ text, images = [] }) {
-  return fetch(`${document.config.baseURL}/posts`, {
+  return call(`${document.config.baseURL}/posts`, {
     method: "POST",
-    headers: {
-      Authorization: "Bearer " + document.session.token,
-    },
     body: JSON.stringify({ text }),
   })
     .then((res) => res.json())
@@ -46,11 +40,8 @@ function createPost({ text, images = [] }) {
 }
 
 function uploadImage(postID, image) {
-  return fetch(`${document.config.baseURL}/posts/${postID}/images`, {
+  return call(`${document.config.baseURL}/posts/${postID}/images`, {
     method: "POST",
-    headers: {
-      Authorization: "Bearer " + document.session.token,
-    },
     body: image,
   })
     .then((res) => res.json())
@@ -64,11 +55,8 @@ function uploadImage(postID, image) {
 }
 
 function deletePost(postID) {
-  return fetch(`${document.config.baseURL}/posts/${postID}`, {
+  return call(`${document.config.baseURL}/posts/${postID}`, {
     method: "DELETE",
-    headers: {
-      Authorization: "Bearer " + document.session.token,
-    },
   })
     .then((res) => res.json())
     .then((data) => {
@@ -80,11 +68,8 @@ function deletePost(postID) {
 }
 
 function like(postID) {
-  return fetch(`${document.config.baseURL}/posts/${postID}/like`, {
+  return call(`${document.config.baseURL}/posts/${postID}/like`, {
     method: "POST",
-    headers: {
-      Authorization: "Bearer " + document.session.token,
-    },
   })
     .then((res) => res.json())
     .then((data) => {
@@ -96,11 +81,8 @@ function like(postID) {
 }
 
 function unlike(postID) {
-  return fetch(`${document.config.baseURL}/posts/${postID}/like`, {
+  return call(`${document.config.baseURL}/posts/${postID}/like`, {
     method: "DELETE",
-    headers: {
-      Authorization: "Bearer " + document.session.token,
-    },
   })
     .then((res) => res.json())
     .then((data) => {
@@ -112,11 +94,8 @@ function unlike(postID) {
 }
 
 function createComment(postID, text) {
-  return fetch(`${document.config.baseURL}/posts/${postID}/comments`, {
+  return call(`${document.config.baseURL}/posts/${postID}/comments`, {
     method: "POST",
-    headers: {
-      Authorization: "Bearer " + document.session.token,
-    },
     body: JSON.stringify({ text }),
   })
     .then((res) => res.json())
@@ -130,11 +109,8 @@ function createComment(postID, text) {
 }
 
 function deleteComment(postID, commentID) {
-  return fetch(`${document.config.baseURL}/posts/${postID}/comments/${commentID}`, {
+  return call(`${document.config.baseURL}/posts/${postID}/comments/${commentID}`, {
     method: "DELETE",
-    headers: {
-      Authorization: "Bearer " + document.session.token,
-    },
   })
     .then((res) => res.json())
     .then((data) => {
@@ -143,6 +119,42 @@ function deleteComment(postID, commentID) {
       }
       return data.acknowledged;
     });
+}
+
+function call(url, options) {
+  if (!options.headers) {
+    options.headers = {};
+  }
+  options.headers.Authorization = `Bearer ${document.session.token}`;
+
+  return fetch(url, options).then((res) => {
+    // If we get anything but a 401, it's the caller's job to handle the rest.
+    // 401 means the token is fucked up, and we handle this.
+    if (res.status != 401) {
+      return res;
+    }
+
+    // Use the refresh token to get a new access token.
+    return fetch(`${document.config.baseURL}/refresh`, {
+      method: "POST",
+      body: JSON.stringify({
+        refresh_token: document.session.refresh_token,
+      }),
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        // Update the session with the new access_token and refresh_token.
+        document.session.token = res.access_token;
+        document.session.refresh_token = res.refresh_token;
+        document.session.expiration = Date.now() + res.expires_in * 1000;
+        localStorage.setItem("session", JSON.stringify(document.session));
+
+        // Update the request headers with the new access_token and start
+        // again.
+        options.headers.Authorization = "Bearer " + document.session.token;
+        return fetch(url, options);
+      });
+  });
 }
 
 export default {

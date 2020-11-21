@@ -71,7 +71,7 @@ export function App() {
   }
 
   function postHandler({ comment, images }) {
-    if (!comment || !comment.length || !images || !images.length) {
+    if ((!comment || !comment.length) && (!images || !images.length)) {
       return Promise.resolve();
     }
 
@@ -92,24 +92,27 @@ export function App() {
     return api.createComment(postId, comment).then((commentId) => {
       let comments = feed[postId].comments || [];
 
-      comments = [...comments, {
-        id: commentId,
-        user_id: document.session.user_id,
-        user_name: document.session.user_name,
-        text: comment,
-        created_at: new Date().toISOString()
-      }]
+      comments = [
+        ...comments,
+        {
+          id: commentId,
+          user_id: document.session.user_id,
+          user_name: document.session.user_name,
+          text: comment,
+          created_at: new Date().toISOString(),
+        },
+      ];
 
       setFeed({
         ...feed,
         [postId]: {
           ...feed[postId],
-          comments
-        }
+          comments,
+        },
       });
 
       return commentId;
-    })
+    });
   }
 
   function deleteCommentHandler(postId, commentId) {
@@ -118,19 +121,19 @@ export function App() {
         ...feed,
         [postId]: {
           ...feed[postId],
-          comments: feed[postId].comments.filter(comment => comment.id !== commentId)
-        }
-      })
-    })
+          comments: feed[postId].comments.filter((comment) => comment.id !== commentId),
+        },
+      });
+    });
   }
 
   function deletePostHandler(postId) {
     return api.deletePost(postId).then(() => {
-      const newFeed = { ...feed }
+      const newFeed = { ...feed };
       delete newFeed[postId];
 
       setFeed(newFeed);
-    })
+    });
   }
 
   if (error) {
@@ -146,7 +149,14 @@ export function App() {
     <Fragment>
       <Header />
       <Form onSubmit={postHandler} />
-      <Feed loading={loading} feed={feed} onLike={likeHandler} onComment={commentHandler} onDeleteComment={deleteCommentHandler} onDeletePost={deletePostHandler} />
+      <Feed
+        loading={loading}
+        feed={feed}
+        onLike={likeHandler}
+        onComment={commentHandler}
+        onDeleteComment={deleteCommentHandler}
+        onDeletePost={deletePostHandler}
+      />
       <Footer />
     </Fragment>
   );

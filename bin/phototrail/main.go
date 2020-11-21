@@ -4,16 +4,19 @@ import (
 	"context"
 	"crypto/md5"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -63,11 +66,12 @@ func wrap(err error, msg string, args ...interface{}) error {
 
 type service struct {
 	// Configuration.
-	authDomain   string
-	authClientID string
-	bind         string
-	dataDir      string
-	printVersion bool
+	authDomain       string
+	authClientID     string
+	authClientSecret string
+	bind             string
+	dataDir          string
+	printVersion     bool
 
 	// Dependencies
 	assets   http.FileSystem
@@ -88,6 +92,7 @@ func (s *service) configure() {
 	// General options.
 	fs.StringVar(&s.authDomain, "auth-domain", "", "auth0 domain to use for login")
 	fs.StringVar(&s.authClientID, "auth-client-id", "", "auth0 client id to use for login")
+	fs.StringVar(&s.authClientSecret, "auth-client-secret", "", "auth0 client secret to use for login")
 	fs.StringVar(&s.bind, "bind", "localhost:1117", "address to listen to")
 	fs.StringVar(&s.dataDir, "data-dir", "./data", "directory to store server's data")
 	fs.BoolVar(&s.printVersion, "version", false, "print the version of rcoredumpd")
@@ -125,34 +130,6 @@ func (s *service) init() (err error) {
 		return wrap(err, `connecting to database`)
 	}
 
-	s.logger.Debug("building assets")
-	s.rootHTML = fmt.Sprintf(`
-		<!DOCTYPE html>
-		<html lang="en">
-			<head>
-				<meta charset="utf-8" />
-				<meta name="viewport" content="width=device-width, initial-scale=1" />
-				<title>Phototrail</title>
-				<link rel="stylesheet" href="/assets/index.css">
-				<link rel="shortcut icon" type="image/svg" href="/assets/favicon.svg"/>
-			</head>
-			<body>
-				<noscript>You need to enable JavaScript to run this app.</noscript>
-				<div id="root"></div>
-				<script>
-					document.Version = '%s';
-					document.BuiltAt = '%s';
-					document.Commit = '%s';
-					document.config = {
-						authDomain: '%s',
-						authClientID: '%s',
-					};
-				</script>
-				<script src="/assets/index.js"></script>
-			</body>
-		</html>
-	`, Version, BuiltAt, Commit, s.authDomain, s.authClientID)
-
 	return nil
 }
 
@@ -163,6 +140,8 @@ func (s *service) run(ctx context.Context) {
 	router.GET("/", s.root)
 	router.GET("/about", s.about)
 	router.GET("/me", s.me)
+	router.GET("/login", s.login)
+	router.POST("/refresh", s.refresh)
 	router.GET("/feed", s.feed)
 	router.POST("/posts", s.createPost)
 	router.POST("/posts/:post_id/images", s.uploadImage)
@@ -257,7 +236,31 @@ func (s *service) methodNotAllowed(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *service) root(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	_, err := w.Write([]byte(s.rootHTML))
+	_, err := w.Write([]byte(fmt.Sprintf(`
+		<!DOCTYPE html>
+		<html lang="en">
+			<head>
+				<meta charset="utf-8" />
+				<meta name="viewport" content="width=device-width, initial-scale=1" />
+				<title>Phototrail</title>
+				<link rel="stylesheet" href="/assets/index.css">
+				<link rel="shortcut icon" type="image/svg" href="/assets/favicon.svg"/>
+			</head>
+			<body>
+				<noscript>You need to enable JavaScript to run this app.</noscript>
+				<div id="root"></div>
+				<script>
+					document.Version = '%s';
+					document.BuiltAt = '%s';
+					document.Commit = '%s';
+					document.config = {
+						baseURL: 'http://%s',
+					}
+				</script>
+				<script src="/assets/index.js"></script>
+			</body>
+		</html>
+	`, Version, BuiltAt, Commit, r.Host)))
 	if err != nil {
 		s.logger.Error("writing response", "err", err)
 	}
@@ -269,6 +272,20 @@ func (s *service) about(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 		"commit":   Commit,
 		"version":  Version,
 	})
+}
+
+type token struct {
+	Access    string `json:"access_token"`
+	Refresh   string `json:"refresh_token"`
+	ExpiresIn int    `json:"expires_in"`
+}
+
+func (t token) Encode() string {
+	var p = make(url.Values)
+	p.Add("access_token", t.Access)
+	p.Add("refresh_token", t.Refresh)
+	p.Add("expires_in", strconv.Itoa(t.ExpiresIn))
+	return p.Encode()
 }
 
 type user struct {
@@ -310,7 +327,7 @@ type comment struct {
 func (s *service) authenticateRequest(r *http.Request) (user, error) {
 	header := r.Header.Get("Authorization")
 
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(`https://%s/userinfo`, s.authDomain), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(`%s/userinfo`, s.authDomain), nil)
 	if err != nil {
 		return user{}, wrap(err, "building request")
 	}
@@ -363,6 +380,95 @@ func (s *service) authenticateRequest(r *http.Request) (user, error) {
 	}
 
 	return u, nil
+}
+
+func (s *service) login(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	// If we haven't got a code, we redirect to auth0's endpoint.
+	if r.URL.Query().Get("code") == "" {
+		var params = make(url.Values)
+		params.Add("client_id", s.authClientID)
+		params.Add("scope", "openid email profile offline_access")
+		params.Add("response_type", "code")
+		params.Add("redirect_uri", fmt.Sprintf("%s://%s%s", "http", r.Host, r.URL))
+		params.Add("state", base64.URLEncoding.EncodeToString([]byte(r.Header.Get("Referer"))))
+		http.Redirect(w, r, fmt.Sprintf(`%s/authorize?%s`, s.authDomain, params.Encode()), http.StatusFound)
+		return
+	}
+
+	// If we've got a code, exchange it for the access_token and
+	// refresh_token.
+	var params = make(url.Values)
+	params.Add("grant_type", "authorization_code")
+	params.Add("client_id", s.authClientID)
+	params.Add("client_secret", s.authClientSecret)
+	params.Add("code", r.URL.Query().Get("code"))
+	params.Add("redirect_uri", fmt.Sprintf("%s://%s%s", "http", r.Host, r.URL))
+	res, err := http.Post(
+		fmt.Sprintf(`%s/oauth/token`, s.authDomain),
+		"application/x-www-form-urlencoded",
+		strings.NewReader(params.Encode()),
+	)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, wrap(err, "requesting token"))
+		return
+	}
+	defer res.Body.Close()
+
+	var t token
+	err = json.NewDecoder(res.Body).Decode(&t)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, wrap(err, "parsing token"))
+		return
+	}
+
+	referer, err := base64.URLEncoding.DecodeString(r.URL.Query().Get("state"))
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, wrap(err, "retrieving referer"))
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf(`%s#%s`, string(referer), t.Encode()), http.StatusFound)
+}
+
+func (s *service) refresh(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var t token
+	err := json.NewDecoder(r.Body).Decode(&t)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, wrap(err, "parsing token"))
+		return
+	}
+
+	// If we've got a code, exchange it for the access_token and
+	// refresh_token.
+	var params = make(url.Values)
+	params.Add("grant_type", "refresh_token")
+	params.Add("client_id", s.authClientID)
+	params.Add("client_secret", s.authClientSecret)
+	params.Add("refresh_token", t.Refresh)
+	res, err := http.Post(
+		fmt.Sprintf(`%s/oauth/token`, s.authDomain),
+		"application/x-www-form-urlencoded",
+		strings.NewReader(params.Encode()),
+	)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, wrap(err, "requesting token"))
+		return
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(res.Body)
+		writeError(w, http.StatusInternalServerError, errors.New(string(body)))
+		return
+	}
+
+	err = json.NewDecoder(res.Body).Decode(&t)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, wrap(err, "parsing token"))
+		return
+	}
+
+	write(w, http.StatusOK, t)
 }
 
 func (s *service) me(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
