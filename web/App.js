@@ -1,36 +1,53 @@
-import React, { useEffect, useState, Fragment } from "react";
+import React, { Fragment } from "react";
 import api from "./api";
 import Header from "./Header";
 import Feed from "./Feed";
 import Footer from "./Footer";
 import Form from "./Form";
+import useSWR from "swr";
 
 // App is the main component, and is mainly concerned with high-level features
 // like state management and top-level components.
 export function App() {
-  const [feed, setFeed] = useState({});
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const {
+    feed,
+    error,
+    loading,
+    createPost,
+    deletePost,
+    createComment,
+    deleteComment,
+    likePost,
+  } = useFeed();
 
-  useEffect(() => {
-    setLoading(true);
+  if (error) {
+    return (
+      <div>
+        <p>Sorry, an error occured. Please retry.</p>
+        <pre>{feedError.message}</pre>
+      </div>
+    );
+  }
 
-    api
-      .getFeed()
-      .then((posts) => {
-        setLoading(false);
-        setFeed(
-          posts.reduce((acc, i) => {
-            acc[i.id] = i;
-            return acc;
-          }, {})
-        );
-      })
-      .catch((error) => {
-        setError(error.message);
-        setLoading(false);
-      });
-  }, []);
+  return (
+    <Fragment>
+      <Header />
+      <Form onSubmit={createPost} />
+      <Feed
+        loading={loading}
+        feed={feed}
+        onLike={likePost}
+        onComment={createComment}
+        onDeleteComment={deleteComment}
+        onDeletePost={deletePost}
+      />
+      <Footer />
+    </Fragment>
+  );
+}
+
+function useFeed() {
+  const { 'data': feed, error, mutate } = useSWR("/feed", api.getFeed);
 
   function likeHandler(postID) {
     if (
@@ -40,7 +57,7 @@ export function App() {
       api.unlike(postID).then(() => {
         let likes = feed[postID].likes.filter((l) => l.user_id !== document.session.user_id);
 
-        setFeed({
+        mutate({
           ...feed,
           [postID]: {
             ...feed[postID],
@@ -59,7 +76,7 @@ export function App() {
           });
         }
 
-        setFeed({
+        mutate({
           ...feed,
           [postID]: {
             ...feed[postID],
@@ -81,7 +98,7 @@ export function App() {
         images: images.map((image) => image.file),
       })
       .then((post) => {
-        setFeed({
+        mutate({
           ...feed,
           [post.id]: post,
         });
@@ -103,7 +120,7 @@ export function App() {
         },
       ];
 
-      setFeed({
+      mutate({
         ...feed,
         [postId]: {
           ...feed[postId],
@@ -117,7 +134,7 @@ export function App() {
 
   function deleteCommentHandler(postId, commentId) {
     return api.deleteComment(postId, commentId).then(() => {
-      setFeed({
+      mutate({
         ...feed,
         [postId]: {
           ...feed[postId],
@@ -132,32 +149,18 @@ export function App() {
       const newFeed = { ...feed };
       delete newFeed[postId];
 
-      setFeed(newFeed);
+      mutate(newFeed);
     });
   }
 
-  if (error) {
-    return (
-      <div>
-        <p>Sorry, an error occured. Please retry.</p>
-        <pre>{error}</pre>
-      </div>
-    );
-  }
-
-  return (
-    <Fragment>
-      <Header />
-      <Form onSubmit={postHandler} />
-      <Feed
-        loading={loading}
-        feed={feed}
-        onLike={likeHandler}
-        onComment={commentHandler}
-        onDeleteComment={deleteCommentHandler}
-        onDeletePost={deletePostHandler}
-      />
-      <Footer />
-    </Fragment>
-  );
+  return {
+    feed: feed,
+    error: error,
+    loading: !feed && !error,
+    createPost: postHandler,
+    deletePost: deletePostHandler,
+    createComment: commentHandler,
+    deleteComment: deleteCommentHandler,
+    likePost: likeHandler,
+  };
 }

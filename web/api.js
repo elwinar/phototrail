@@ -7,7 +7,15 @@ function getFeed() {
       if (data.error) {
         throw new Error(data.error);
       }
-      return data.posts || {};
+
+      if (!data.posts) {
+        return {}
+      }
+
+      return data.posts.reduce((acc, curr) => {
+        acc[curr.id] = curr;
+        return acc;
+      }, {})
     });
 }
 
