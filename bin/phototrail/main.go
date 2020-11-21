@@ -405,13 +405,18 @@ func (s *service) authenticateRequest(r *http.Request) (user, error) {
 }
 
 func (s *service) login(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	proto := r.Header.Get("X-Forwarded-Proto")
+	if len(proto) == 0 {
+		proto = "http"
+	}
+
 	// If we haven't got a code, we redirect to auth0's endpoint.
 	if r.URL.Query().Get("code") == "" {
 		var params = make(url.Values)
 		params.Add("client_id", s.authClientID)
 		params.Add("scope", "openid email profile offline_access")
 		params.Add("response_type", "code")
-		params.Add("redirect_uri", fmt.Sprintf("%s://%s%s", "http", r.Host, r.URL))
+		params.Add("redirect_uri", fmt.Sprintf("%s://%s%s", proto, r.Host, r.URL))
 		params.Add("state", base64.URLEncoding.EncodeToString([]byte(r.Header.Get("Referer"))))
 		http.Redirect(w, r, fmt.Sprintf(`%s/authorize?%s`, s.authDomain, params.Encode()), http.StatusFound)
 		return
@@ -424,7 +429,7 @@ func (s *service) login(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	params.Add("client_id", s.authClientID)
 	params.Add("client_secret", s.authClientSecret)
 	params.Add("code", r.URL.Query().Get("code"))
-	params.Add("redirect_uri", fmt.Sprintf("%s://%s%s", "http", r.Host, r.URL))
+	params.Add("redirect_uri", fmt.Sprintf("%s://%s%s", proto, r.Host, r.URL))
 	res, err := http.Post(
 		fmt.Sprintf(`%s/oauth/token`, s.authDomain),
 		"application/x-www-form-urlencoded",
