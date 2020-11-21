@@ -24,11 +24,13 @@ import (
 	"github.com/inconshreveable/log15"
 	"github.com/jmoiron/sqlx"
 	"github.com/julienschmidt/httprouter"
+	"github.com/patrickmn/go-cache"
 	"github.com/phyber/negroni-gzip/gzip"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/cors"
 	"github.com/urfave/negroni"
-	_ "rsc.io/sqlite"
+	"go4.org/syncutil/singleflight"
+	_ "modernc.org/sqlite"
 )
 
 var (
@@ -77,7 +79,8 @@ type service struct {
 	assets   http.FileSystem
 	database *sqlx.DB
 	logger   log15.Logger
-	rootHTML string
+	group    *singleflight.Group
+	cache    *cache.Cache
 }
 
 // configure read and validate the configuration of the service and populate
@@ -125,10 +128,13 @@ func (s *service) init() (err error) {
 	}
 
 	s.logger.Debug("connecting to the database")
-	s.database, err = sqlx.Connect("sqlite3", filepath.Join(s.dataDir, "database.sqlite"))
+	s.database, err = sqlx.Connect("sqlite", filepath.Join(s.dataDir, "database.sqlite"))
 	if err != nil {
 		return wrap(err, `connecting to database`)
 	}
+
+	s.group = new(singleflight.Group)
+	s.cache = cache.New(1*time.Minute, 2*time.Minute)
 
 	return nil
 }
@@ -327,59 +333,75 @@ type comment struct {
 func (s *service) authenticateRequest(r *http.Request) (user, error) {
 	header := r.Header.Get("Authorization")
 
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(`%s/userinfo`, s.authDomain), nil)
-	if err != nil {
-		return user{}, wrap(err, "building request")
-	}
-	req.Header.Set("Authorization", header)
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return user{}, wrap(err, "executing request")
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return user{}, errors.New("invalid token")
-	}
-
-	var u user
-	err = json.NewDecoder(res.Body).Decode(&u)
-	if err != nil {
-		return u, wrap(err, "parsing response")
-	}
-
-	err = s.database.GetContext(r.Context(), &u, `
-		select id
-		from users
-		where sub = ?
-	`, u.Sub)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return u, wrap(err, "querying user")
-	}
-
-	if err != nil {
-		res, err := s.database.ExecContext(r.Context(), `
-			insert into users (sub, name)
-			values (?, ?)
-		`, u.Sub, u.Name)
-		if err != nil {
-			return u, wrap(err, "inserting user")
+	v, err := s.group.Do(header, func() (interface{}, error) {
+		// If the result is already in the cache, we're ok.
+		if v, ok := s.cache.Get(header); ok {
+			return v, nil
 		}
-		ID, _ := res.LastInsertId()
-		u.ID = int(ID)
-	} else {
-		_, err := s.database.ExecContext(r.Context(), `
-			update users
-			set name = ?
-			where id = ?
-		`, u.Name, u.ID)
-		if err != nil {
-			return u, wrap(err, "updating user")
-		}
-	}
 
-	return u, nil
+		// Else, kindly ask auth0 if the token is valid.
+		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(`%s/userinfo`, s.authDomain), nil)
+		if err != nil {
+			return user{}, wrap(err, "building request")
+		}
+		req.Header.Set("Authorization", header)
+
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return user{}, wrap(err, "executing request")
+		}
+		defer res.Body.Close()
+
+		if res.StatusCode != http.StatusOK {
+			return user{}, errors.New("invalid token")
+		}
+
+		// Parse the user information from the token introspection.
+		var u user
+		err = json.NewDecoder(res.Body).Decode(&u)
+		if err != nil {
+			return u, wrap(err, "parsing response")
+		}
+
+		// Create or update the user.
+		err = s.database.GetContext(r.Context(), &u, `
+			select id
+			from users
+			where sub = ?
+		`, u.Sub)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return u, wrap(err, "querying user")
+		}
+
+		if err != nil {
+			res, err := s.database.ExecContext(r.Context(), `
+				insert into users (sub, name)
+				values (?, ?)
+			`, u.Sub, u.Name)
+			if err != nil {
+				return u, wrap(err, "inserting user")
+			}
+			ID, _ := res.LastInsertId()
+			u.ID = int(ID)
+		} else {
+			_, err := s.database.ExecContext(r.Context(), `
+				update users
+				set name = ?
+				where id = ?
+			`, u.Name, u.ID)
+			if err != nil {
+				return u, wrap(err, "updating user")
+			}
+		}
+
+		// Store the user in the cache for later.
+		s.cache.SetDefault(header, u)
+
+		return u, nil
+	})
+	u := v.(user)
+
+	return u, err
 }
 
 func (s *service) login(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
