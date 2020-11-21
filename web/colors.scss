@@ -47,6 +47,17 @@ $accent-color: #aaa;
   }
 }
 
+@mixin ghost-button {
+  background: transparent;
+  color: $primary;
+
+
+  &:hover {
+    text-decoration: underline;
+    color: $dark;
+  }
+}
+
 @mixin image {
   margin-bottom: 1rem;
   display: block;

@@ -27,6 +27,11 @@
   margin-bottom: 1.5rem;
 }
 
+.DeletePostButton {
+  @include ghost-button;
+  color: $accent-color;
+}
+
 .Likes {
   @include secondary-button;
 }
@@ -42,18 +47,7 @@
 }
 
 .CommentsButton {
-  background: transparent;
-  color: $primary;
-
-
-  &:hover {
-    text-decoration: underline;
-    color: $dark;
-  }
-}
-
-.Form {
-  
+  @include ghost-button;
 }
 
 .Input {
@@ -80,6 +74,8 @@
   margin-bottom: 0;
   margin-top: 0;
   font-size: 0.889rem;
+  display: flex;
+  justify-content: space-between;
 }
 
 .CommentUserName {
@@ -89,6 +85,11 @@
 .CommentDate {
   color: $accent-color;
   margin-right: 1rem;
+}
+
+.DeleteComment {
+  @include ghost-button;
+  color: $accent-color;
 }
 
 .Comment {

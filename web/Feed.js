@@ -3,7 +3,7 @@ import styles from "./Feed.scss";
 import { Card } from "./Card";
 import { ErrorBoundary } from "./ErrorBoundary";
 
-export default function Feed({ loading, feed, onLike, onComment }) {
+export default function Feed({ loading, feed, onLike, onComment, onDeleteComment, onDeletePost }) {
   if (loading) {
     return (
       <div>
@@ -20,7 +20,7 @@ export default function Feed({ loading, feed, onLike, onComment }) {
           return (
             <li key={post.id}>
               <ErrorBoundary>
-                <Card post={post} onLike={onLike} onComment={onComment} />
+                <Card post={post} onLike={onLike} onComment={onComment} onDeleteComment={onDeleteComment} onDeletePost={onDeletePost} />
               </ErrorBoundary>
             </li>
           );

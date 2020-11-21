@@ -13,12 +13,17 @@
   padding: 0;
   margin: 0;
   margin-bottom: 1rem;
+}
+
+.UploadInputs {
   display: flex;
   justify-content: space-between;
 }
 
 .Image {
-  @include image;
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
 }
 
 .Comment {

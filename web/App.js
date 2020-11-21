@@ -1,6 +1,5 @@
 import React, { useEffect, useState, Fragment } from "react";
 import api from "./api";
-import styles from "./App.scss";
 import Header from "./Header";
 import Feed from "./Feed";
 import Footer from "./Footer";
@@ -72,6 +71,10 @@ export function App() {
   }
 
   function postHandler({ comment, images }) {
+    if (!comment || !comment.length || !images || !images.length) {
+      return Promise.resolve();
+    }
+
     return api
       .createPost({
         text: comment,
@@ -109,6 +112,27 @@ export function App() {
     })
   }
 
+  function deleteCommentHandler(postId, commentId) {
+    return api.deleteComment(postId, commentId).then(() => {
+      setFeed({
+        ...feed,
+        [postId]: {
+          ...feed[postId],
+          comments: feed[postId].comments.filter(comment => comment.id !== commentId)
+        }
+      })
+    })
+  }
+
+  function deletePostHandler(postId) {
+    return api.deletePost(postId).then(() => {
+      const newFeed = { ...feed }
+      delete newFeed[postId];
+
+      setFeed(newFeed);
+    })
+  }
+
   if (error) {
     return (
       <div>
@@ -122,7 +146,7 @@ export function App() {
     <Fragment>
       <Header />
       <Form onSubmit={postHandler} />
-      <Feed loading={loading} feed={feed} onLike={likeHandler} onComment={commentHandler} />
+      <Feed loading={loading} feed={feed} onLike={likeHandler} onComment={commentHandler} onDeleteComment={deleteCommentHandler} onDeletePost={deletePostHandler} />
       <Footer />
     </Fragment>
   );
