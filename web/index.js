@@ -44,6 +44,10 @@ import "./index.scss";
         user_name: user.name,
       })
     );
+
+    // Remove the ugly hash from the URL. It also avoids someone
+    // bookmarking it by error.
+    history.pushState("", document.title, window.location.pathname);
   }
 
   // Check if we've got something in the local storage. If we do, put the token
