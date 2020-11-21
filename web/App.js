@@ -87,7 +87,7 @@ function useFeed() {
     }
   }
 
-  function postHandler({ comment, images }) {
+  function createPostHandler({ comment, images }) {
     if ((!comment || !comment.length) && (!images || !images.length)) {
       return Promise.resolve();
     }
@@ -105,7 +105,7 @@ function useFeed() {
       });
   }
 
-  function commentHandler(postId, comment) {
+  function createCommentHandler(postId, comment) {
     return api.createComment(postId, comment).then((commentId) => {
       let comments = feed[postId].comments || [];
 
@@ -157,9 +157,9 @@ function useFeed() {
     feed: feed,
     error: error,
     loading: !feed && !error,
-    createPost: postHandler,
+    createPost: createPostHandler,
     deletePost: deletePostHandler,
-    createComment: commentHandler,
+    createComment: createCommentHandler,
     deleteComment: deleteCommentHandler,
     likePost: likeHandler,
   };
