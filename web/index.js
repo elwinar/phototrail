@@ -4,6 +4,12 @@ import { App } from "./App";
 import { AppBoundary } from "./AppBoundary.js";
 import "./index.scss";
 
+if (!document.config) {
+  document.config = {
+    baseURL: window.location.origin,
+  };
+}
+
 (async function () {
   // Check the hash for the access_token. If we've got one,
   // we've just returned from auth, so we put the token in the local

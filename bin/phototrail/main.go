@@ -260,14 +260,11 @@ func (s *service) root(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 					document.Version = '%s';
 					document.BuiltAt = '%s';
 					document.Commit = '%s';
-					document.config = {
-						baseURL: 'http://%s',
-					}
 				</script>
 				<script src="/assets/index.js"></script>
 			</body>
 		</html>
-	`, Version, BuiltAt, Commit, r.Host)))
+	`, Version, BuiltAt, Commit)))
 	if err != nil {
 		s.logger.Error("writing response", "err", err)
 	}
