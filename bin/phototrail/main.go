@@ -132,6 +132,7 @@ func (s *service) init() (err error) {
 	if err != nil {
 		return wrap(err, `connecting to database`)
 	}
+	s.database.SetMaxOpenConns(1)
 
 	s.group = new(singleflight.Group)
 	s.cache = cache.New(1*time.Minute, 2*time.Minute)
