@@ -47,7 +47,7 @@ export function App() {
 }
 
 function useFeed() {
-  const { 'data': feed, error, mutate } = useSWR("/feed", api.getFeed);
+  const { data: feed, error, mutate } = useSWR("/feed", api.getFeed, { refreshInterval: 10000 });
 
   function likeHandler(postID) {
     if (
