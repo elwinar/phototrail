@@ -7,6 +7,7 @@
   padding: 1rem 2rem;
   position: sticky;
   top: 0;
+  text-align: center;
 
   h1 {
     text-align: center;
@@ -14,4 +15,9 @@
     margin: 0;
     color: $dark;
   }
+}
+
+.Logo {
+  max-width: 600px;
+  max-height: 50px;
 }
