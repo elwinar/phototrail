@@ -1,5 +1,6 @@
-@import './colors.scss';
+@import "./colors.scss";
+@import "./mixins.scss";
 
 .ErrorCard {
-    @include polaroid;
+  @include polaroid;
 }

@@ -1,0 +1,50 @@
+@import "./colors.scss";
+
+@mixin container {
+  max-width: 600px;
+  margin: auto;
+  padding: 1rem;
+}
+
+@mixin polaroid {
+  background: white;
+  padding: 2em;
+  max-width: 100%;
+  margin: 2em 0;
+  box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.3);
+}
+
+@mixin primary-button {
+  background: $primary;
+  color: white;
+
+  &:hover {
+    background: $secondary;
+  }
+}
+
+@mixin secondary-button {
+  background: $light;
+  color: $primary;
+
+  &:hover {
+    background: $primary;
+    color: white;
+  }
+}
+
+@mixin ghost-button {
+  background: transparent;
+  color: $primary;
+
+  &:hover {
+    text-decoration: underline;
+    color: $dark;
+  }
+}
+
+@mixin image {
+  margin-bottom: 1rem;
+  display: block;
+  width: 100%;
+}
