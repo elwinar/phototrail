@@ -134,6 +134,11 @@ func (s *service) init() (err error) {
 	}
 	s.database.SetMaxOpenConns(1)
 
+	_, err = s.database.Exec("PRAGMA foreign_keys = ON")
+	if err != nil {
+		return wrap(err, `activating foreign keys`)
+	}
+
 	s.group = new(singleflight.Group)
 	s.cache = cache.New(1*time.Minute, 2*time.Minute)
 
