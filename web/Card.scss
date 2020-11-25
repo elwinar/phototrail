@@ -31,6 +31,7 @@
 .DeletePostButton {
   @include ghost-button;
   color: $accent-color;
+  padding: 0 1rem;
 }
 
 .Likes {
