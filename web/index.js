@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { App } from "./App";
 import { AppBoundary } from "./AppBoundary.js";
 import "./index.scss";
+import 'regenerator-runtime/runtime'
 
 if (!document.config) {
   document.config = {
