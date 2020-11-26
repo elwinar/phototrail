@@ -4,7 +4,7 @@ import styles from "./Form.scss";
 export default function Form({ onSubmit }) {
   const [comment, setComment] = useState("");
   const [images, setImages] = useState([]);
-  const formRef = useRef()
+  const formRef = useRef();
 
   async function handleImages(files) {
     let results = [];
@@ -33,9 +33,8 @@ export default function Form({ onSubmit }) {
         ref={formRef}
         onSubmit={(e) => {
           e.preventDefault();
-          onSubmit({ comment, images }).then(() =>{
+          onSubmit({ comment, images }).then(() => {
             reset();
-            
           });
         }}
         className={styles.Form}
@@ -52,20 +51,19 @@ export default function Form({ onSubmit }) {
           {images.map((image) => (
             <img key={image.file.name} className={styles.Image} src={image.dataURL} />
           ))}
-          <div className={styles.UploadInputs}>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => handleImages(e.target.files)}
-            />
-            <button type="reset" onClick={reset}>
-              Reset
-          </button>
-          </div>
+
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => handleImages(e.target.files)}
+          />
         </fieldset>
         <button className={styles.Submit} type="submit">
           Post
+        </button>
+        <button type="reset" onClick={reset}>
+          Reset
         </button>
       </form>
     </section>

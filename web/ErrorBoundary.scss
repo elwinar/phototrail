@@ -2,5 +2,6 @@
 @import "./mixins.scss";
 
 .ErrorCard {
-  @include polaroid;
+  @include container;
+  background-color: white;
 }

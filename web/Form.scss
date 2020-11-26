@@ -3,10 +3,10 @@
 
 .Container {
   @include container;
-}
-
-.Form {
-  @include polaroid;
+  background-color: white;
+  padding: 1rem;
+  margin-bottom: 4rem;
+  position: relative;
 }
 
 .Upload {
@@ -14,11 +14,6 @@
   padding: 0;
   margin: 0;
   margin-bottom: 1rem;
-}
-
-.UploadInputs {
-  display: flex;
-  justify-content: space-between;
 }
 
 .Image {
@@ -44,4 +39,5 @@
 
 .Submit {
   @include primary-button;
+  margin-right: 0.5rem;
 }

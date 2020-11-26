@@ -2,30 +2,41 @@
 @import "./mixins.scss";
 
 .Card {
-  @include polaroid;
+  @include container;
+  padding: 1rem 0;
+  background-color: white;
 }
 
 .Image {
   @include image;
 }
 
+.Footer {
+  padding: 0 1rem;
+  margin-bottom: 1rem;
+}
+
 .Header {
   margin-top: 0;
   margin-bottom: 1rem;
+  padding: 0 1rem;
   display: flex;
   justify-content: space-between;
 }
 
 .Username {
+  margin: 0;
   color: $primary;
 }
 
 .Date {
+  font-size: 0.889rem;
   color: $accent-color;
 }
 
 .Text {
-  margin-bottom: 1.5rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 .DeletePostButton {
@@ -42,14 +53,9 @@
   color: $important;
 }
 
-.Footer {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
 .CommentsButton {
   @include ghost-button;
+  padding-left: 0;
 }
 
 .Input {

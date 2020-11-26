@@ -5,3 +5,9 @@
   @include container;
   list-style: none;
 }
+
+.LoadMore {
+  @include primary-button;
+  display: block;
+  margin: 0 auto;
+}

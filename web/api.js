@@ -1,5 +1,6 @@
-function getFeed() {
-  return call(`${document.config.baseURL}/feed`, {
+// first param is the key from swr
+function getFeed(params) {
+  return call(`${document.config.baseURL}/feed?${params}`, {
     method: "GET",
   })
     .then((res) => res.json())
@@ -9,13 +10,13 @@ function getFeed() {
       }
 
       if (!data.posts) {
-        return {}
+        return {};
       }
 
       return data.posts.reduce((acc, curr) => {
         acc[curr.id] = curr;
         return acc;
-      }, {})
+      }, {});
     });
 }
 
