@@ -1,4 +1,13 @@
 import React, { Fragment } from "react";
+
+if (process.env.NODE_ENV === "development") {
+  const whyDidYouRender = require("@welldone-software/why-did-you-render");
+  whyDidYouRender(React, {
+    trackAllPureComponents: true,
+    trackExtraHooks: [[App, "useFeed"]],
+  });
+}
+
 import ReactDOM from "react-dom";
 import App from "./App";
 import Header from "./Header";
@@ -10,6 +19,7 @@ import "regenerator-runtime/runtime";
 if (!document.config) {
   document.config = {
     baseURL: window.location.origin,
+    pageSize: 20,
   };
 }
 
@@ -48,7 +58,7 @@ if (!document.config) {
   const user = await fetch(`${document.config.baseURL}/me`, {
     method: "GET",
     headers: {
-      Authorization: "Bearer " + params.get("access_token"),
+      Authorization: "Bearer " + document.session.token,
     },
   }).then((res) => res.json());
   document.session = {

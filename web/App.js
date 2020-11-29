@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect } from "react";
+import React, { Fragment, useState, useEffect, useCallback } from "react";
 import api from "./api";
 import Feed from "./Feed";
 import Form from "./Form";
@@ -46,134 +46,151 @@ function App() {
 
 function useFeed() {
   const { data: pages, error, mutate, size, setSize } = useSWRInfinite(getKey, api.getFeed, {
-    refreshInterval: 10000,
+    //refreshInterval: 10000,
     initialSize: 1,
   });
 
   const [feed, setFeed] = useState(flattenFeedPages(pages));
-
   useEffect(() => {
     setFeed(flattenFeedPages(pages));
   }, [pages]);
 
-  function likeHandler(postID) {
-    const post = pages.find((page) => page[postID] !== undefined)[postID];
+  const likeHandler = useCallback(
+    function likeHandler(postID) {
+      const post = pages.find((page) => page[postID] !== undefined)[postID];
 
-    if (post.likes && post.likes.find((l) => l.user_id === document.session.user_id)) {
-      api.unlike(postID).then(() => {
-        let likes = post.likes.filter((l) => l.user_id !== document.session.user_id);
+      if (post.likes && post.likes.find((l) => l.user_id === document.session.user_id)) {
+        api.unlike(postID).then(() => {
+          let likes = post.likes.filter((l) => l.user_id !== document.session.user_id);
 
-        setFeed({
-          ...feed,
-          [postID]: {
-            ...feed[postID],
-            likes,
-          },
+          setFeed({
+            ...feed,
+            [postID]: {
+              ...feed[postID],
+              likes,
+            },
+          });
+
+          mutate();
         });
+      } else {
+        api.like(postID).then(() => {
+          let likes = [...(post.likes || [])];
 
-        mutate();
-      });
-    } else {
-      api.like(postID).then(() => {
-        let likes = [...(post.likes || [])];
+          if (!likes.find((l) => l.user_id == document.session.user_id)) {
+            likes.push({
+              user_id: document.session.user_id,
+              user_name: document.session.user_name,
+            });
+          }
 
-        if (!likes.find((l) => l.user_id == document.session.user_id)) {
-          likes.push({
+          setFeed({
+            ...feed,
+            [postID]: {
+              ...feed[postID],
+              likes,
+            },
+          });
+
+          mutate();
+        });
+      }
+    },
+    [feed]
+  );
+
+  const createPostHandler = useCallback(
+    function createPostHandler({ comment, images }) {
+      if ((!comment || !comment.length) && (!images || !images.length)) {
+        return Promise.resolve();
+      }
+
+      return api
+        .createPost({
+          text: comment,
+          images: images.map((image) => image.file),
+        })
+        .then((post) => {
+          setFeed({
+            ...feed,
+            [post.id]: post,
+          });
+
+          mutate();
+        });
+    },
+    [feed]
+  );
+
+  const createCommentHandler = useCallback(
+    function createCommentHandler(postId, comment) {
+      return api.createComment(postId, comment).then((commentId) => {
+        let comments = feed[postId].comments || [];
+
+        comments = [
+          ...comments,
+          {
+            id: commentId,
             user_id: document.session.user_id,
             user_name: document.session.user_name,
-          });
-        }
+            text: comment,
+            created_at: new Date().toISOString(),
+          },
+        ];
 
         setFeed({
           ...feed,
-          [postID]: {
-            ...feed[postID],
-            likes,
+          [postId]: {
+            ...feed[postId],
+            comments,
+          },
+        });
+
+        mutate();
+
+        return commentId;
+      });
+    },
+    [feed]
+  );
+
+  const deleteCommentHandler = useCallback(
+    function deleteCommentHandler(postId, commentId) {
+      return api.deleteComment(postId, commentId).then(() => {
+        setFeed({
+          ...feed,
+          [postId]: {
+            ...feed[postId],
+            comments: feed[postId].comments.filter((comment) => comment.id !== commentId),
           },
         });
 
         mutate();
       });
-    }
-  }
+    },
+    [feed]
+  );
 
-  function createPostHandler({ comment, images }) {
-    if ((!comment || !comment.length) && (!images || !images.length)) {
-      return Promise.resolve();
-    }
+  const deletePostHandler = useCallback(
+    function deletePostHandler(postId) {
+      return api.deletePost(postId).then(() => {
+        const newFeed = { ...feed };
+        delete newFeed[postId];
 
-    return api
-      .createPost({
-        text: comment,
-        images: images.map((image) => image.file),
-      })
-      .then((post) => {
-        setFeed({
-          ...feed,
-          [post.id]: post,
-        });
+        setFeed(newFeed);
 
         mutate();
       });
-  }
+    },
+    [feed]
+  );
 
-  function createCommentHandler(postId, comment) {
-    return api.createComment(postId, comment).then((commentId) => {
-      let comments = feed[postId].comments || [];
-
-      comments = [
-        ...comments,
-        {
-          id: commentId,
-          user_id: document.session.user_id,
-          user_name: document.session.user_name,
-          text: comment,
-          created_at: new Date().toISOString(),
-        },
-      ];
-
-      setFeed({
-        ...feed,
-        [postId]: {
-          ...feed[postId],
-          comments,
-        },
-      });
-
-      mutate();
-
-      return commentId;
-    });
-  }
-
-  function deleteCommentHandler(postId, commentId) {
-    return api.deleteComment(postId, commentId).then(() => {
-      setFeed({
-        ...feed,
-        [postId]: {
-          ...feed[postId],
-          comments: feed[postId].comments.filter((comment) => comment.id !== commentId),
-        },
-      });
-
-      mutate();
-    });
-  }
-
-  function deletePostHandler(postId) {
-    return api.deletePost(postId).then(() => {
-      const newFeed = { ...feed };
-      delete newFeed[postId];
-
-      setFeed(newFeed);
-
-      mutate();
-    });
-  }
-
-  function loadMoreHandler() {
-    setSize(size + 1);
-  }
+  const loadMoreHandler = useCallback(
+    function loadMoreHandler() {
+      setSize(size + 1);
+    },
+    [size]
+  );
 
   return {
     feed: feed,
@@ -193,31 +210,36 @@ function flattenFeedPages(pages) {
     return null;
   }
 
-  return pages.reduce((acc, curr) => {
+  const res = pages.reduce((acc, curr) => {
     return { ...acc, ...curr };
   }, {});
-}
 
-const getKey = (pageIndex, previousPageData) => {
-  const POSTS_BY_PAGE = 20;
-
-  // first page, we don't have `previousPageData`
-  if (pageIndex === 0) {
-    return `limit=${POSTS_BY_PAGE}`;
-  }
-
-  // reached the end
-  if (!previousPageData || Object.keys(previousPageData).length === 1) {
+  if (res.length == 0) {
     return null;
   }
 
-  // date of the last post is our cursor
-  const oldestPost = Object.values(previousPageData).sort((a, b) =>
-    a.created_at > b.created_at ? 1 : -1
-  )[0];
+  return res;
+}
 
-  // add the cursor to the API endpoint
-  return `from=${oldestPost.created_at}&limit=${POSTS_BY_PAGE}`;
+const getKey = (index, previous) => {
+  let key = `limit=${document.config.pageSize}`;
+
+  // If we're on the first page, don't bother with the cursor.
+  if (index === 0) {
+    return key;
+  }
+
+  // If there is no previous page, or if the previous page was uncomplete,
+  // return null to cancel the fetch.
+  if (!previous || Object.keys(previous).length !== document.config.pageSize) {
+    return null;
+  }
+
+  // Use the date of the oldest post as cursor.
+  const oldest = Object.values(previous).sort((a, b) => (a.created_at > b.created_at ? 1 : -1))[0];
+  key += `&from=${oldest.created_at}`;
+
+  return key;
 };
 
 export default App;

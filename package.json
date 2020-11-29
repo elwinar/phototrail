@@ -4,6 +4,7 @@
   "description": "_rcoredump_ is meant to be a toolbox for aggregating, indexing, and searching core dumps. Think ELK for core dumps.",
   "dependencies": {
     "@auth0/auth0-react": "^1.2.0",
+    "@welldone-software/why-did-you-render": "^6.0.3",
     "auth0": "^2.30.0",
     "normalize.css": "^8.0.1",
     "react": "^17.0.1",
