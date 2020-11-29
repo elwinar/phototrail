@@ -1,10 +1,17 @@
 import React, { memo } from "react";
 import styles from "./Header.scss";
 
-function Header({ logo }) {
+function Header({ logo, onLogout }) {
   return (
     <header className={styles.Header}>
-      {logo ? <img className={styles.Logo} src={logo} /> : <h1>Phototrail</h1>}
+      {logo ? (
+        <img className={styles.Logo} src={logo} />
+      ) : (
+        <h1 className={styles.Title}>Phototrail</h1>
+      )}
+      <button className={styles.Logout} onClick={onLogout}>
+        ⏻
+      </button>
     </header>
   );
 }

@@ -153,6 +153,7 @@ func (s *service) run(ctx context.Context) {
 	router.GET("/about", s.about)
 	router.GET("/me", s.me)
 	router.GET("/login", s.login)
+	router.GET("/logout", s.logout)
 	router.POST("/refresh", s.refresh)
 	router.GET("/feed", s.feed)
 	router.POST("/posts", s.createPost)
@@ -458,6 +459,19 @@ func (s *service) login(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	}
 
 	http.Redirect(w, r, fmt.Sprintf(`%s#%s`, string(referer), t.Encode()), http.StatusFound)
+}
+
+func (s *service) logout(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	proto := r.Header.Get("X-Forwarded-Proto")
+	if len(proto) == 0 {
+		proto = "http"
+	}
+
+	var params = make(url.Values)
+	params.Add("client_id", s.authClientID)
+	params.Add("returnTo", fmt.Sprintf("%s://%s", proto, r.Host))
+	http.Redirect(w, r, fmt.Sprintf(`%s/v2/logout?%s`, s.authDomain, params.Encode()), http.StatusFound)
+	return
 }
 
 func (s *service) refresh(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

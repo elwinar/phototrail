@@ -72,7 +72,13 @@ if (!document.config) {
 
   ReactDOM.render(
     <Fragment>
-      <Header logo={logo} />
+      <Header
+        logo={logo}
+        onLogout={() => {
+          localStorage.clear();
+          window.location.replace(`${document.config.baseURL}/logout`);
+        }}
+      />
       <AppBoundary>
         <App />
       </AppBoundary>
