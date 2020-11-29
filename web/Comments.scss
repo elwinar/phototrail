@@ -1,0 +1,44 @@
+@import "./colors.scss";
+@import "./mixins.scss";
+
+.Comments {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  margin-bottom: 1rem;
+}
+
+.CommentInfo {
+  margin-bottom: 0;
+  margin-top: 0;
+  font-size: 0.889rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.CommentUserName {
+  color: $secondary;
+}
+
+.CommentDate {
+  color: $accent-color;
+  margin-right: 1rem;
+}
+
+.DeleteComment {
+  @include ghost-button;
+  color: $accent-color;
+}
+
+.Comment {
+  background-color: $light-grey;
+  border-radius: 10px 10px 10px 0;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  margin-top: 0;
+
+  &.Mine {
+    background-color: $light;
+    border-radius: 10px 10px 0 10px;
+  }
+}

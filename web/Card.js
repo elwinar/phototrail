@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import styles from "./Card.scss";
+import Comments from "./Comments";
+import CommentForm from "./CommentForm";
 
 export function Card({ post, onLike, onComment, onDeleteComment, onDeletePost }) {
   const [showComments, setShowComments] = useState(false);
@@ -61,65 +63,3 @@ export function Card({ post, onLike, onComment, onDeleteComment, onDeletePost })
   );
 }
 
-function Comments({ comments, onDeleteComment, postId }) {
-  if (!comments || !comments.length) {
-    return null;
-  }
-
-  return (
-    <section>
-      <ul className={styles.Comments}>
-        {comments.map((c) => {
-          const commentDate = new Date(c.created_at).toLocaleDateString();
-          const isMine = document.session.user_id === c.user_id;
-
-          return (
-            <li key={c.id}>
-              <p className={styles.CommentInfo}>
-                <span>
-                  <span className={styles.CommentDate}>{commentDate}</span>
-                  <span className={styles.CommentUserName}>{c.user_name}</span>
-                </span>
-                {isMine && (
-                  <button
-                    type="button"
-                    onClick={() => onDeleteComment(postId, c.id)}
-                    className={styles.DeleteComment}
-                  >
-                    Delete
-                  </button>
-                )}
-              </p>
-              <p className={`${styles.Comment} ${isMine ? styles.Mine : ""}`}>{c.text}</p>
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  );
-}
-
-function CommentForm({ onComment, postId, setShowComments }) {
-  const [comment, setComment] = useState("");
-
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        setShowComments(true);
-        onComment(postId, comment).then(() => {
-          setComment("");
-        });
-      }}
-    >
-      <input
-        type="text"
-        name="comment"
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        className={styles.Input}
-        placeholder="Your comment..."
-      />
-    </form>
-  );
-}

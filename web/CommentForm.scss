@@ -1,0 +1,15 @@
+@import "./colors.scss";
+@import "./mixins.scss";
+
+.Input {
+  width: 100%;
+  border-radius: 2px;
+  border: 1px solid $grey;
+  padding: 0.5rem 1rem;
+  border-radius: 18px;
+
+  &:focus {
+    outline: none;
+    border-color: $primary;
+  }
+}
