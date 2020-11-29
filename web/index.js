@@ -14,7 +14,6 @@ import Header from "./Header";
 import Footer from "./Footer";
 import AppBoundary from "./AppBoundary.js";
 import "./index.scss";
-import "regenerator-runtime/runtime";
 
 if (!document.config) {
   document.config = {

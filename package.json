@@ -20,6 +20,6 @@
     "sass": "^1.29.0"
   },
   "browserslist": [
-    "defaults"
+    "since 2017-06"
   ]
 }
