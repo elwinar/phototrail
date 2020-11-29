@@ -19,21 +19,12 @@ if (!document.config) {
   // storage.
   let params = new URLSearchParams(window.location.hash.slice(1));
   if (params.get("access_token")) {
-    const user = await fetch(`${document.config.baseURL}/me`, {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + params.get("access_token"),
-      },
-    }).then((res) => res.json());
-
     localStorage.setItem(
       "session",
       JSON.stringify({
         token: params.get("access_token"),
         refresh_token: params.get("refresh_token"),
         expiration: Date.now() + parseInt(params.get("expires_in")) * 1000,
-        user_id: user.id,
-        user_name: user.name,
       })
     );
 
@@ -51,6 +42,20 @@ if (!document.config) {
     window.location.replace(`${document.config.baseURL}/login`);
     return;
   }
+
+  // Retrieve the user information. This is done on every load to avoid having
+  // issues when refreshing the database.
+  const user = await fetch(`${document.config.baseURL}/me`, {
+    method: "GET",
+    headers: {
+      Authorization: "Bearer " + params.get("access_token"),
+    },
+  }).then((res) => res.json());
+  document.session = {
+    ...document.session,
+    user_id: user.id,
+    user_name: user.name,
+  };
 
   // Detect if we've got a logo, so it can be used in the header.
   const logo = await new Promise(async (resolve) => {
