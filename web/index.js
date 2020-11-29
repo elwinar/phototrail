@@ -49,16 +49,30 @@ if (!document.config) {
   if (!document.session || !document.session.token || document.session.expiration < Date.now()) {
     localStorage.clear();
     window.location.replace(`${document.config.baseURL}/login`);
-  } else {
-    ReactDOM.render(
-      <Fragment>
-        <Header />
-        <AppBoundary>
-          <App />
-        </AppBoundary>
-        <Footer />
-      </Fragment>,
-      document.getElementById("root")
-    );
+    return;
   }
+
+  // Detect if we've got a logo, so it can be used in the header.
+  const logo = await new Promise(async (resolve) => {
+    const path = `${document.config.baseURL}/images/logo.svg`;
+    const img = new Image();
+    img.onload = function () {
+      resolve(path);
+    };
+    img.onerror = function () {
+      resolve(undefined);
+    };
+    img.src = path;
+  });
+
+  ReactDOM.render(
+    <Fragment>
+      <Header logo={logo} />
+      <AppBoundary>
+        <App />
+      </AppBoundary>
+      <Footer />
+    </Fragment>,
+    document.getElementById("root")
+  );
 })();

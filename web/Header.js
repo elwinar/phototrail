@@ -1,31 +1,12 @@
-import React from "react";
+import React, { memo } from "react";
 import styles from "./Header.scss";
 
-function Header() {
-  const logoPath = `${document.config.baseURL}/images/logo.svg`;
-
-  const [hasLogo, setHasLogo] = React.useState(false);
-
-  React.useEffect(function lookupLogo() {
-    new Promise((resolve) => {
-      const img = new Image();
-      img.onload = function () {
-        resolve(true);
-      };
-      img.onerror = function () {
-        resolve(false);
-      };
-      img.src = logoPath;
-    }).then((res) => {
-      setHasLogo(res);
-    });
-  }, []);
-
+function Header({ logo }) {
   return (
     <header className={styles.Header}>
-      {hasLogo ? <img className={styles.Logo} src={logoPath} /> : <h1>Phototrail</h1>}
+      {logo ? <img className={styles.Logo} src={logo} /> : <h1>Phototrail</h1>}
     </header>
   );
 }
 
-export default Header;
+export default memo(Header);
