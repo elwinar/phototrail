@@ -1,7 +1,7 @@
-import React from "react";
+import React, { memo } from "react";
 import styles from "./Footer.scss";
 
-export default function Footer() {
+function Footer() {
   return (
     <p className={styles.Footer}>
       For documentation, issues, see the{" "}
@@ -9,3 +9,5 @@ export default function Footer() {
     </p>
   );
 }
+
+export default memo(Footer);

@@ -1,17 +1,9 @@
-import React, { Fragment } from "react";
+import React, { Fragment, memo } from "react";
 import styles from "./Feed.scss";
-import { Card } from "./Card";
-import { ErrorBoundary } from "./ErrorBoundary";
+import Card from "./Card";
+import ErrorBoundary from "./ErrorBoundary";
 
-export default function Feed({
-  loading,
-  feed,
-  onLike,
-  onComment,
-  onDeleteComment,
-  onDeletePost,
-  onLoadMore,
-}) {
+function Feed({ loading, feed, onLike, onComment, onDeleteComment, onDeletePost, onLoadMore }) {
   if (loading) {
     return (
       <div>
@@ -47,3 +39,5 @@ export default function Feed({
     </Fragment>
   );
 }
+
+export default memo(Feed);

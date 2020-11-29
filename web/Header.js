@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "./Header.scss";
 
-export default function Header() {
+function Header() {
   const logoPath = `${document.config.baseURL}/images/logo.svg`;
 
   const [hasLogo, setHasLogo] = React.useState(false);
@@ -27,3 +27,5 @@ export default function Header() {
     </header>
   );
 }
+
+export default Header;

@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import styles from "./Card.scss";
 import Comments from "./Comments";
 import CommentForm from "./CommentForm";
 
-export function Card({ post, onLike, onComment, onDeleteComment, onDeletePost }) {
+function Card({ post, onLike, onComment, onDeleteComment, onDeletePost }) {
   const [showComments, setShowComments] = useState(false);
 
   const isLikedByMe = Boolean(
@@ -49,7 +49,7 @@ export function Card({ post, onLike, onComment, onDeleteComment, onDeletePost })
               className={styles.CommentsButton}
               onClick={() => setShowComments(!showComments)}
             >
-              Comments ({post.comments.length.toLocaleString()}) {" "}
+              Comments ({post.comments.length.toLocaleString()}){" "}
               {showComments ? <span>&#9652;</span> : <span>&#9662;</span>}
             </button>
           )}
@@ -63,3 +63,4 @@ export function Card({ post, onLike, onComment, onDeleteComment, onDeletePost })
   );
 }
 
+export default memo(Card);

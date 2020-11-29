@@ -1,9 +1,11 @@
-import React from "react";
+import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
-import { App } from "./App";
-import { AppBoundary } from "./AppBoundary.js";
+import App from "./App";
+import Header from "./Header";
+import Footer from "./Footer";
+import AppBoundary from "./AppBoundary.js";
 import "./index.scss";
-import 'regenerator-runtime/runtime'
+import "regenerator-runtime/runtime";
 
 if (!document.config) {
   document.config = {
@@ -49,9 +51,13 @@ if (!document.config) {
     window.location.replace(`${document.config.baseURL}/login`);
   } else {
     ReactDOM.render(
-      <AppBoundary>
-        <App />
-      </AppBoundary>,
+      <Fragment>
+        <Header />
+        <AppBoundary>
+          <App />
+        </AppBoundary>
+        <Footer />
+      </Fragment>,
       document.getElementById("root")
     );
   }

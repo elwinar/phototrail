@@ -1,14 +1,12 @@
 import React, { Fragment, useState, useEffect } from "react";
 import api from "./api";
-import Header from "./Header";
 import Feed from "./Feed";
-import Footer from "./Footer";
 import Form from "./Form";
 import useSWR, { useSWRInfinite } from "swr";
 
 // App is the main component, and is mainly concerned with high-level features
 // like state management and top-level components.
-export function App() {
+function App() {
   const {
     feed,
     error,
@@ -32,7 +30,6 @@ export function App() {
 
   return (
     <Fragment>
-      <Header />
       <Form onSubmit={createPost} />
       <Feed
         loading={loading}
@@ -43,7 +40,6 @@ export function App() {
         onDeletePost={deletePost}
         onLoadMore={loadMorePosts}
       />
-      <Footer />
     </Fragment>
   );
 }
@@ -223,3 +219,5 @@ const getKey = (pageIndex, previousPageData) => {
   // add the cursor to the API endpoint
   return `from=${oldestPost.created_at}&limit=${POSTS_BY_PAGE}`;
 };
+
+export default App;

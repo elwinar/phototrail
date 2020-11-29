@@ -1,7 +1,7 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, memo } from "react";
 import styles from "./Form.scss";
 
-export default function Form({ onSubmit }) {
+function Form({ onSubmit }) {
   const [comment, setComment] = useState("");
   const [images, setImages] = useState([]);
   const formRef = useRef();
@@ -69,3 +69,5 @@ export default function Form({ onSubmit }) {
     </section>
   );
 }
+
+export default memo(Form);
